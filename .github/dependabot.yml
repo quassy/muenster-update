@@ -2,52 +2,49 @@ version: 2
 
 updates:
   # frontend
-  - package-ecosystem: "npm"
-    directory: "/frontend"
+  - package-ecosystem: npm
+    directory: /frontend
     schedule:
-      interval: "monthly"
+      interval: monthly
     labels:
-      - "dependencies"
-      - "component/frontend"
+      - dependencies
     groups:
       frontend-dependencies:
         patterns:
-          - "*"
+          - *
 
   # github-actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: github-actions
+    directory: /
     schedule:
-      interval: "monthly"
+      interval: monthly
     labels:
-      - "dependencies"
+      - dependencies
     groups:
       github-actions-dependencies:
         patterns:
-          - "*"
+          - *
 
   # backend
-  - package-ecosystem: "uv"
-    directory: "/backend"
+  - package-ecosystem: uv
+    directory: /backend
     schedule:
-      interval: "monthly"
+      interval: monthly
     labels:
-      - "dependencies"
-      - "component/backend"
+      - dependencies
     groups:
       backend-dependencies:
         patterns:
-          - "*"
+          - *
 
   # docker compose / container images
-  - package-ecosystem: "docker"
-    directory: "/"
+  - package-ecosystem: docker
+    directory: /
     schedule:
-      interval: "monthly"
+      interval: monthly
     labels:
-      - "dependencies"
-      - "component/docker"
+      - dependencies
     groups:
       docker-dependencies:
         patterns:
-          - "*"
+          - *
