@@ -14,7 +14,6 @@ from .serializers import (
     OrganizerSerializer,
 )
 
-
 schema_metadata = {
     "title": "Münster Update API",
     "description": (
@@ -36,7 +35,6 @@ schema_yml = get_schema_view(
 
 
 class EventsFilterSet(FilterSet):
-
     location = filters.NumberFilter(label="Location ID to filter events for")
     organizer = filters.NumberFilter(label="Organizer ID to filter events for")
     minDate = filters.DateFilter(

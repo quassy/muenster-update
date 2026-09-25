@@ -191,7 +191,6 @@ class Event(models.Model):
 
 
 class EventImage(models.Model):
-
     event = models.ForeignKey(
         "Event", on_delete=models.CASCADE, related_name="images"
     )

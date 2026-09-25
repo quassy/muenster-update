@@ -3,15 +3,21 @@
 # Licensed under the MIT License. See https://go.microsoft.com/fwlink/?linkid=2090316 for license information.
 #-------------------------------------------------------------------------------------------------------------
 
-# Update the VARIANT arg in docker-compose.yml to pick a Python version: 3, 3.8, 3.7, 3.6 
-ARG VARIANT=3.8
-FROM mcr.microsoft.com/vscode/devcontainers/python:${VARIANT}
+# Update the VARIANT arg in compose.yaml to pick a Python version
+ARG VARIANT=3.14
+FROM mcr.microsoft.com/devcontainers/python:${VARIANT}
 
-ENV PYTHONUNBUFFERED 1
+COPY --from=ghcr.io/astral-sh/uv:0.12.19 /uv /uvx /bin/
+
+# Keep the virtual environment out of the bind-mounted workspace, so it does
+# not clash with a .venv created on the host
+ENV PYTHONUNBUFFERED=1 \
+    UV_PROJECT_ENVIRONMENT=/opt/venv \
+    PATH="/opt/venv/bin:$PATH"
 
 # This image includes a non-root user with sudo access. Use the "remoteUser" 
 # property in devcontainer.json to use it. On Linux, update the values below 
-# or in docker-compose.yml to ensure the container user's UID/GID matches your
+# or in compose.yaml to ensure the container user's UID/GID matches your
 # local values. See https://aka.ms/vscode-remote/containers/non-root-user for details.
 ARG USERNAME=vscode
 ARG USER_UID=1000
@@ -24,12 +30,9 @@ RUN if [ "$USER_GID" != "1000" ] || [ "$USER_UID" != "1000" ]; then \
         && chmod -R $USER_UID:$USER_GID /home/$USERNAME; \
     fi
 
+RUN mkdir -p /opt/venv && chown $USER_UID:$USER_GID /opt/venv \
+    && echo 'export PATH="/opt/venv/bin:$PATH"' > /etc/profile.d/01-venv.sh
 
-# [Optional] If your requirements rarely change, uncomment this section to add them to the image.
-#
-# COPY requirements.txt /tmp/pip-tmp/
-# RUN pip3 --disable-pip-version-check --no-cache-dir install -r /tmp/pip-tmp/requirements.txt \
-#    && rm -rf /tmp/pip-tmp
 
 # ** [Optional] Uncomment this section to install additional packages. **
 #

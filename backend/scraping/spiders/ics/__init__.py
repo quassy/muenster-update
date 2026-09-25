@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import scrapy
 
 from icalendar import Calendar
@@ -15,7 +17,9 @@ def str_or_none(vevent_item, key):
 
 
 class ICalendarSpider(EventSpider):
-    def start_requests(self):
+    ics_url: str
+
+    async def start(self):
         resp = scrapy.Request(
             self.ics_url,
             errback=self.handle_error,
@@ -26,10 +30,19 @@ class ICalendarSpider(EventSpider):
 
         ics_data = Calendar.from_ical(response.text)
 
-        for item in ics_data.walk("vevent"):
+        for item in ics_data.events:
+            start, end = item.DTSTART, item.DTEND
+            # All-day events (with dates only) and events without an end are
+            # not supported
+            if not isinstance(start, datetime) or not isinstance(
+                end, datetime
+            ):
+                raise ValueError(
+                    f"Unsupported start or end of event {item['UID']}"
+                )
 
             clean_name = str(item["SUMMARY"])
-            prefix = f"{item['DTSTART'].dt.strftime('%d.%m.%Y')} - "
+            prefix = f"{start.strftime('%d.%m.%Y')} - "
             if clean_name.startswith(prefix):
                 clean_name = clean_name.replace(prefix, "")
 
@@ -38,10 +51,10 @@ class ICalendarSpider(EventSpider):
                 "name": clean_name.strip(),
                 "description": str_or_none(item, "DESCRIPTION"),
                 "url": str_or_none(item, "URL"),
-                "start_date": item["DTSTART"].dt.date(),
-                "start_time": item["DTSTART"].dt.time(),
-                "end_date": item["DTEND"].dt.date(),
-                "end_time": item["DTEND"].dt.time(),
+                "start_date": start.date(),
+                "start_time": start.time(),
+                "end_date": end.date(),
+                "end_time": end.time(),
                 "location": str_or_none(item, "LOCATION"),
                 # "mode": event_data["Veranstaltung"],
                 "organizer": str_or_none(item, "ORGANIZER"),

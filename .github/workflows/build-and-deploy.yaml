@@ -20,17 +20,36 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install python 3.10
-        uses: actions/setup-python@v7
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
         with:
-          python-version: '3.10.x'
-          cache: 'pip'
-          cache-dependency-path: 'backend/requirements.txt'
+          working-directory: backend
+          version: '0.12.19'
+          enable-cache: true
 
-      - name: Install and execute 'tox'
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Check code style
         run: |
-          pip install tox
-          tox
+          uv run ruff check
+          uv run ruff format --check
+
+      - name: Check types
+        run: uv run ty check
+
+      - name: Check Django project and API schema
+        env:
+          DJANGO_SECRET_KEY: ci
+          DB_HOST: localhost
+          DB_PORT: '5432'
+          DB_NAME: ci
+          DB_USER: ci
+          DB_PASSWORD: ci
+        run: |
+          uv run ./manage.py check
+          uv run ./manage.py makemigrations --check --dry-run
+          uv run ./manage.py generateschema > /dev/null
 
   build-backend:
     name: Build backend container

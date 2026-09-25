@@ -7,7 +7,6 @@ from scraping.spiders import EventSpider
 
 
 class MuensterlandSpider(EventSpider):
-
     name = "muensterland"
 
     defaults = {
@@ -15,7 +14,7 @@ class MuensterlandSpider(EventSpider):
         "source_license": "CC BY-SA 4.0",
     }
 
-    def start_requests(self):
+    async def start(self):
         api_token = os.getenv("MUENSTERLAND_API_TOKEN")
         if not api_token:
             self.logger.error(
@@ -23,7 +22,7 @@ class MuensterlandSpider(EventSpider):
             )
             raise CloseSpider("missing_auth")
         yield scrapy.Request(
-            f"https://www.digitalhub.ms/api/" f"events?api_token={api_token}",
+            f"https://www.digitalhub.ms/api/events?api_token={api_token}",
             errback=self.handle_error,
         )
 

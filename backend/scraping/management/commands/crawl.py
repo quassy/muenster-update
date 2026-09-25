@@ -1,13 +1,9 @@
-from django.core.management.base import BaseCommand
-from twisted.internet import reactor
-from scrapy.crawler import CrawlerRunner
-from scrapy.utils.log import configure_logging
+from django.core.management.base import BaseCommand, CommandError
+from scrapy.crawler import CrawlerProcess
 from scrapy.settings import Settings
-from scrapy.spiderloader import SpiderLoader
 
 
 class Command(BaseCommand):
-
     help = "Crawl events and populate database"
 
     def add_arguments(self, parser):
@@ -22,16 +18,20 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         settings = Settings(
             {
-                "SPIDER_MODULES": ["scraping.spiders", "scraping.spiders.ics"],
+                "SPIDER_MODULES": ["scraping.spiders"],
+                # Would start servers allowing code execution in the crawl
+                # process, which is not needed
+                "REMOTE_CONTROL_ENABLED": False,
+                "TELNETCONSOLE_ENABLED": False,
             }
         )
-        spider_loader = SpiderLoader(settings)
+        # CrawlerProcess installs the reactor configured by Scrapy, so do not
+        # import twisted.internet.reactor before it
+        process = CrawlerProcess(settings)
         # Run all spiders if none specified
-        spiders = options["spider"] or spider_loader.list()
-        configure_logging()
-        runner = CrawlerRunner(settings=settings)
+        spiders = options["spider"] or process.spider_loader.list()
         for spider_name in spiders:
-            runner.crawl(spider_loader.load(spider_name))
-        deferred = runner.join()
-        deferred.addBoth(lambda _: reactor.stop())
-        reactor.run()
+            process.crawl(spider_name)
+        process.start()
+        if process.bootstrap_failed:
+            raise CommandError("At least one spider failed to start")

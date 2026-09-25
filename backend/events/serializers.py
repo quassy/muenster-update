@@ -10,8 +10,11 @@ class EventSerializer(serializers.ModelSerializer):
         extra_fields = ["images"]
         depth = 1
 
-    def get_field_names(self, *args):
-        return super().get_field_names(*args) + self.Meta.extra_fields
+    def get_field_names(self, declared_fields, info):
+        return (
+            super().get_field_names(declared_fields, info)
+            + self.Meta.extra_fields
+        )
 
 
 class EventSourceSerializer(serializers.ModelSerializer):

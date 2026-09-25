@@ -4,6 +4,7 @@ import logging
 
 import bleach
 import scrapy
+from asgiref.sync import sync_to_async
 from geopy import Point
 from django.db import transaction
 from geopy.geocoders import Nominatim
@@ -11,13 +12,19 @@ from scrapy.exceptions import DropItem
 
 from events.models import Event, EventSource, Location, Organizer
 
-
 logger = logging.getLogger(__name__)
 
 
 class SpiderDefaultsPipeline:
-    def process_item(self, item, spider):
-        for k, v in spider.defaults.items():
+    def __init__(self, crawler):
+        self.crawler = crawler
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        return cls(crawler)
+
+    def process_item(self, item):
+        for k, v in self.crawler.spider.defaults.items():
             item.setdefault(k, v)
         return item
 
@@ -44,7 +51,7 @@ class SanitizeHTMLPipeline:
         ],
     }
 
-    def process_item(self, item, spider):  # skipcq: PYL-W0613
+    def process_item(self, item):
         if "description" in item:
             item["formatted_description"] = item["description"]
         for field in list(item):
@@ -70,7 +77,12 @@ class SanitizeHTMLPipeline:
 
 
 class DatabaseExportPipeline:
-    def process_item(self, item, spider):
+    async def process_item(self, item):
+        # Scrapy runs an asyncio event loop, in which Django forbids
+        # synchronous database access, so save the item in a separate thread
+        return await sync_to_async(self.save_item)(item)
+
+    def save_item(self, item):
         with transaction.atomic():
             values = item.copy()
 
@@ -123,7 +135,6 @@ class DatabaseExportPipeline:
 
 
 class EventSpider(scrapy.Spider):
-
     custom_settings = {
         "ITEM_PIPELINES": {
             "scraping.spiders.SpiderDefaultsPipeline": 100,

@@ -5,7 +5,6 @@ from .models import Event
 
 @admin.register(Event)
 class SalesAdmin(admin.ModelAdmin):
-
     list_display = [
         "id",
         "name",

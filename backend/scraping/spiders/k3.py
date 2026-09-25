@@ -6,7 +6,6 @@ from scraping.spiders import EventSpider
 
 
 class K3Spider(EventSpider):
-
     name = "k3"
 
     defaults = {
@@ -14,7 +13,7 @@ class K3Spider(EventSpider):
         "source_license": "CC BY 3.0 DE",
     }
 
-    def start_requests(self):
+    async def start(self):
 
         URL = "http://download.k3.de/OpenData/Open_Data_Veranstaltungen_von_k3_stadtfuehrungen_FMPXMLRESULT.xml"  # noqa
 
@@ -36,7 +35,6 @@ class K3Spider(EventSpider):
         ]
 
         for item in response.xpath("//k3:FMPXMLRESULT/k3:RESULTSET/k3:ROW"):
-
             raw_data = [
                 i.xpath("text()").get() for i in item.xpath("k3:COL/k3:DATA")
             ]

@@ -1,25 +1,27 @@
-FROM python:3.10 AS django
+FROM python:3.14 AS django
+
+COPY --from=ghcr.io/astral-sh/uv:0.12.19 /uv /uvx /bin/
 
 WORKDIR /app
 
-ENV PYTHONFAULTHANDLER=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
+ENV PYTHONFAULTHANDLER=1 PYTHONUNBUFFERED=1 \
+  UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_NO_CACHE=1 UV_PYTHON_DOWNLOADS=0 \
+  UV_PROJECT_ENVIRONMENT=/opt/venv PATH="/opt/venv/bin:$PATH"
 
-COPY requirements.txt .
+COPY pyproject.toml uv.lock ./
 
-RUN pip install -r requirements.txt
+RUN uv sync --locked --no-dev
 
 COPY mj mj
 COPY events events
 COPY scraping scraping
 COPY templates templates
-COPY manage.py setup.py ./
-
-RUN pip install .
+COPY manage.py ./
 
 RUN useradd -u 5000 app && chown app:app /app
 USER app:app
 
-CMD ["gunicorn", "--bind", ":8000", "-k", "uvicorn.workers.UvicornWorker", "mj.asgi:application"]
+CMD ["gunicorn", "--bind", ":8000", "--no-control-socket", "-k", "uvicorn_worker.UvicornWorker", "mj.asgi:application"]
 
 # static files
 FROM django AS staticfiles-prep

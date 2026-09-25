@@ -8,7 +8,6 @@ from scraping.spiders import EventSpider
 
 
 class MuensterlandEvSpider(EventSpider):
-
     name = "muensterland_ev"
 
     defaults = {
@@ -16,18 +15,16 @@ class MuensterlandEvSpider(EventSpider):
         "source_license": None,
     }
 
-    def start_requests(self):
+    async def start(self):
 
-        if not (
-            os.getenv("DATENPORTAL_USER") and os.getenv("DATENPORTAL_PASSWORD")
-        ):
+        USER = os.getenv("DATENPORTAL_USER")
+        PASSWORD = os.getenv("DATENPORTAL_PASSWORD")
+        if not (USER and PASSWORD):
             message = "Set DATENPORTAL_USER & DATENPORTAL_PASSWORD in .env"
             self.logger.error(message)
             raise ConnectionError(message)
 
         URL = "https://www.datenportal-muensterland.de/api/v1/events"
-        USER = os.getenv("DATENPORTAL_USER")
-        PASSWORD = os.getenv("DATENPORTAL_PASSWORD")
 
         # read events from API
         today = date.today()
@@ -57,8 +54,8 @@ class MuensterlandEvSpider(EventSpider):
                 and event["poi"]["address"]["city"]
             ):
                 address += (
-                    f', {event["poi"]["address"]["postal_code"]} '
-                    f'{event["poi"]["address"]["city"]}'
+                    f", {event['poi']['address']['postal_code']} "
+                    f"{event['poi']['address']['city']}"
                 )
 
             yield {

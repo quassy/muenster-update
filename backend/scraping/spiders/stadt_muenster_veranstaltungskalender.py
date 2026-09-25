@@ -7,7 +7,6 @@ from scraping.spiders import EventSpider
 
 
 class StadtMuensterKalenderSpider(EventSpider):
-
     name = "stadt_muenster_kalender"
 
     defaults = {
@@ -15,7 +14,7 @@ class StadtMuensterKalenderSpider(EventSpider):
         "source_license": None,
     }
 
-    def start_requests(self):
+    async def start(self):
         URL = "https://www.muenster.de/veranstaltungskalender/scripts/frontend/suche.php"  # noqa
 
         yield scrapy.Request(
@@ -56,7 +55,6 @@ class StadtMuensterKalenderSpider(EventSpider):
 
     def parse_event(self, response):
         for element in response.css("div.veranstaltungs-details"):
-
             title = element.css("div.titel::text").get().strip()
 
             # Parse a date string like "Freitag, 23.9.2022, 20.00 Uhr"

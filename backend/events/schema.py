@@ -1,8 +1,51 @@
+from django.utils import translation
 from rest_framework.schemas.openapi import AutoSchema
 
 
 class CamelizingAutoSchema(AutoSchema):
     # Via https://github.com/vbabiy/djangorestframework-camel-case/issues/79
+
+    def get_operation(self, path, method):
+        # Rest Framework translates the descriptions of its built-in
+        # parameters (page, limit, id), keep them English like the rest of
+        # the schema
+        with translation.override("en"):
+            return super().get_operation(path, method)
+
+    def get_filter_parameters(self, path, method):
+        # django-filter removed its schema generation, so build the query
+        # parameters from the filterset like its former
+        # DjangoFilterBackend.get_schema_operation_parameters did
+        if not self.allows_filters(path, method):
+            return []
+        parameters = []
+        for filter_backend in self.view.filter_backends:
+            backend = filter_backend()
+            if hasattr(backend, "get_schema_operation_parameters"):
+                parameters += backend.get_schema_operation_parameters(
+                    self.view
+                )
+                continue
+            if not hasattr(backend, "get_filterset_class"):
+                continue
+            filterset_class = backend.get_filterset_class(
+                self.view, self.view.get_queryset()
+            )
+            if filterset_class is None:
+                continue
+            for name, filter_ in filterset_class.base_filters.items():
+                parameters.append(
+                    {
+                        "name": name,
+                        "required": filter_.extra["required"],
+                        "in": "query",
+                        "description": str(
+                            name if filter_.label is None else filter_.label
+                        ),
+                        "schema": {"type": "string"},
+                    }
+                )
+        return parameters
 
     def map_serializer(self, serializer):
         result = super().map_serializer(serializer)

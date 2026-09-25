@@ -27,7 +27,7 @@ updates:
           - "*"
 
   # backend
-  - package-ecosystem: "pip"
+  - package-ecosystem: "uv"
     directory: "/backend"
     schedule:
       interval: "monthly"
