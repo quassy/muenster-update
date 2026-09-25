@@ -23,44 +23,28 @@ class K3Spider(EventSpider):
         )
 
     def parse(self, response):
-        response.selector.register_namespace(
-            "k3", "http://www.filemaker.com/fmpxmlresult"
-        )
+        response.selector.register_namespace("k3", "http://www.filemaker.com/fmpxmlresult")
 
-        fields = [
-            field.xpath("@NAME").get()
-            for field in response.xpath(
-                "//k3:FMPXMLRESULT/k3:METADATA/k3:FIELD"
-            )
-        ]
+        fields = [field.xpath("@NAME").get() for field in response.xpath("//k3:FMPXMLRESULT/k3:METADATA/k3:FIELD")]
 
         for item in response.xpath("//k3:FMPXMLRESULT/k3:RESULTSET/k3:ROW"):
-            raw_data = [
-                i.xpath("text()").get() for i in item.xpath("k3:COL/k3:DATA")
-            ]
+            raw_data = [i.xpath("text()").get() for i in item.xpath("k3:COL/k3:DATA")]
 
             event_data = dict(zip(fields, raw_data))
 
-            if (
-                event_data["Stadt"] != "Münster"
-                or event_data["Sprache"] != "Deutsch"
-            ):
+            if event_data["Stadt"] != "Münster" or event_data["Sprache"] != "Deutsch":
                 continue
 
             # TODO:
             # address = coordinates in event_data["TreffpunktGeodaten"]
 
             parsed_date = datetime.strptime(event_data["Datum"], "%d.%m.%Y")
-            start_time = datetime.strptime(
-                event_data["UhrzeitBeginn"], "%H:%M:%S"
-            )
+            start_time = datetime.strptime(event_data["UhrzeitBeginn"], "%H:%M:%S")
             end_time = datetime.strptime(event_data["UhrzeitEnde"], "%H:%M:%S")
 
             event = {
                 "source_event_id": str(event_data["Nummer"]),
-                "name": (
-                    f"{event_data['Veranstaltung']} {event_data['Stadt']}"
-                ).strip(),
+                "name": (f"{event_data['Veranstaltung']} {event_data['Stadt']}").strip(),
                 "description": event_data["Beschreibung"],
                 "url": event_data["Buchungslink"],
                 "start_date": parsed_date,

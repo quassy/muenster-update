@@ -17,9 +17,7 @@ class MuensterlandSpider(EventSpider):
     async def start(self):
         api_token = os.getenv("MUENSTERLAND_API_TOKEN")
         if not api_token:
-            self.logger.error(
-                "Please set the MUENSTERLAND_API_TOKEN environment variable"
-            )
+            self.logger.error("Please set the MUENSTERLAND_API_TOKEN environment variable")
             raise CloseSpider("missing_auth")
         yield scrapy.Request(
             f"https://www.digitalhub.ms/api/events?api_token={api_token}",

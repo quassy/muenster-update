@@ -10,9 +10,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "spider",
             nargs="*",
-            help=(
-                "Name(s) of spider(s) to run. Will run all spiders if missing."
-            ),
+            help=("Name(s) of spider(s) to run. Will run all spiders if missing."),
         )
 
     def handle(self, *args, **options):

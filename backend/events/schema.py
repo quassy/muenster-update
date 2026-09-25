@@ -22,15 +22,11 @@ class CamelizingAutoSchema(AutoSchema):
         for filter_backend in self.view.filter_backends:
             backend = filter_backend()
             if hasattr(backend, "get_schema_operation_parameters"):
-                parameters += backend.get_schema_operation_parameters(
-                    self.view
-                )
+                parameters += backend.get_schema_operation_parameters(self.view)
                 continue
             if not hasattr(backend, "get_filterset_class"):
                 continue
-            filterset_class = backend.get_filterset_class(
-                self.view, self.view.get_queryset()
-            )
+            filterset_class = backend.get_filterset_class(self.view, self.view.get_queryset())
             if filterset_class is None:
                 continue
             for name, filter_ in filterset_class.base_filters.items():
@@ -39,9 +35,7 @@ class CamelizingAutoSchema(AutoSchema):
                         "name": name,
                         "required": filter_.extra["required"],
                         "in": "query",
-                        "description": str(
-                            name if filter_.label is None else filter_.label
-                        ),
+                        "description": str(name if filter_.label is None else filter_.label),
                         "schema": {"type": "string"},
                     }
                 )
@@ -50,16 +44,11 @@ class CamelizingAutoSchema(AutoSchema):
     def map_serializer(self, serializer):
         result = super().map_serializer(serializer)
         camelized_properties = {
-            self._to_camel_case(field_name): schema
-            for field_name, schema in result["properties"].items()
+            self._to_camel_case(field_name): schema for field_name, schema in result["properties"].items()
         }
         new_result = {"type": "object", "properties": camelized_properties}
-        new_result["required"] = list(
-            map(self._to_camel_case, result.get("required", []))
-        ) + [
-            field
-            for field, schema in new_result["properties"].items()
-            if schema.get("readOnly")
+        new_result["required"] = list(map(self._to_camel_case, result.get("required", []))) + [
+            field for field, schema in new_result["properties"].items() if schema.get("readOnly")
         ]
 
         return new_result

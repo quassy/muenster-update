@@ -24,9 +24,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "source_event_id",
-                    models.CharField(
-                        help_text="Event ID used at source", max_length=255
-                    ),
+                    models.CharField(help_text="Event ID used at source", max_length=255),
                 ),
                 (
                     "source_url",
@@ -257,8 +255,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name="event",
-            constraint=models.UniqueConstraint(
-                fields=("source", "source_event_id"), name="unique_event"
-            ),
+            constraint=models.UniqueConstraint(fields=("source", "source_event_id"), name="unique_event"),
         ),
     ]

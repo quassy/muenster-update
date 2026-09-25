@@ -40,10 +40,9 @@ dev = [
 package = false
 
 [tool.ruff]
-line-length = 79
+line-length = 120
 
 [tool.ruff.lint]
-# pycodestyle and Pyflakes, like flake8 did before
 select = ["E", "F", "W"]
 exclude = ["*/migrations/*"]
 

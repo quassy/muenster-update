@@ -66,9 +66,7 @@ class EventSource(models.Model):
 class Event(models.Model):
     class Meta:
         constraints = [
-            models.UniqueConstraint(
-                fields=["source", "source_event_id"], name="unique_event"
-            ),
+            models.UniqueConstraint(fields=["source", "source_event_id"], name="unique_event"),
         ]
         ordering = ["start_date", "start_time"]
 
@@ -179,6 +177,7 @@ class Event(models.Model):
             "performer",
             "mode",
             "organizer",
+            "visible",
         ]
     ]
 
@@ -191,9 +190,7 @@ class Event(models.Model):
 
 
 class EventImage(models.Model):
-    event = models.ForeignKey(
-        "Event", on_delete=models.CASCADE, related_name="images"
-    )
+    event = models.ForeignKey("Event", on_delete=models.CASCADE, related_name="images")
     url = models.CharField(max_length=4095)
     description = models.CharField(max_length=4095, null=True, blank=True)
     source = models.CharField(max_length=4095, null=True, blank=True)
