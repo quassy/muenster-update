@@ -1,5 +1,5 @@
 [project]
-name = "mj"
+name = "backend"
 version = "0.2.0"
 description = "Database management, data import, and API for muenster-jetzt"
 requires-python = ">=3.14,<3.15"
